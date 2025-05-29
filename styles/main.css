@@ -1,0 +1,137 @@
+/* 全局样式 */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 侧栏样式 */
+.sidebar {
+    overflow-y: auto;
+}
+
+/* 元件网格样式 */
+.component-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.component-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: move;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.component-item:hover {
+    background-color: #f0f0f0;
+}
+
+.component-item svg {
+    width: 100%;
+    height: 40px;
+}
+
+/* 线路列表样式 */
+.wire-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* 画布容器样式 */
+.canvas-container {
+    position: relative;
+    height: calc(100% - 38px); /* 减去工具栏高度 */
+    overflow: hidden;
+    background-color: #fafafa;
+    background-image: radial-gradient(circle, #ddd 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+#drawing-area {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 元件在画布上的样式 */
+.circuit-component {
+    cursor: move;
+    user-select: none;
+}
+
+.circuit-component.selected {
+    outline: 2px dashed #4285f4;
+}
+
+.component-text {
+    font-size: 12px;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* 连接点样式 */
+.anchor-point {
+    fill: #fff;
+    stroke: #333;
+    stroke-width: 1;
+    cursor: pointer;
+}
+
+.anchor-point:hover {
+    fill: #4285f4;
+}
+
+/* 连接线样式 */
+.wire {
+    stroke: #333;
+    stroke-width: 1.5;
+}
+
+.wire.selected {
+    stroke: #4285f4;
+    stroke-width: 2;
+}
+
+/* 辅助矩形框样式 */
+.helper-rect {
+    stroke: #4285f4;
+    stroke-width: 1;
+    stroke-dasharray: 5, 5;
+    fill: transparent;
+}
+
+/* 工具栏样式 */
+.toolbar {
+    display: flex;
+    align-items: center;
+    height: 38px;
+}
+
+/* 缩放控制样式 */
+.zoom-control {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 拖拽时的样式 */
+.dragging {
+    opacity: 0.7;
+    position: absolute;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* 导入模态框样式调整 */
+.modal-dialog {
+    max-width: 500px;
+}

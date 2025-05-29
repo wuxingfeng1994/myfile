@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电路图绘制</title>
+    <link rel="stylesheet" href="styles/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="src/vue.global.js"></script>
+    <script src="src/svg.min.js"></script>
+    <script src="src/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container-fluid vh-100">
+        <div class="row h-100">
+            <!-- 侧栏 -->
+            <div class="col-md-2 sidebar bg-light p-0 h-100 border-end">
+                <div class="accordion" id="sidebarAccordion">
+                    <!-- 元件部分 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingComponents">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComponents" aria-expanded="true" aria-controls="collapseComponents">
+                                元件
+                            </button>
+                        </h2>
+                        <div id="collapseComponents" class="accordion-collapse collapse show" aria-labelledby="headingComponents">
+                            <div class="accordion-body p-2">
+                                <div class="component-grid" id="component-container">
+                                    <!-- 使用Vue循环遍历元件 -->
+                                    <div v-for="(component, type) in CircuitComponents" 
+                                         :key="type" 
+                                         class="component-item" 
+                                         :data-type="type"
+                                         draggable="true"
+                                         @dragstart="handleDragStart($event, type)">
+                                        <!-- 使用SVG显示元件 -->
+                                        <svg :width="component.width" :height="component.height">
+                                            <path :d="component.path" fill="none" stroke="#000" stroke-width="1.5"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 线路部分 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingWires">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWires" aria-expanded="false" aria-controls="collapseWires">
+                                线路
+                            </button>
+                        </h2>
+                        <div id="collapseWires" class="accordion-collapse collapse" aria-labelledby="headingWires">
+                            <div class="accordion-body p-2">
+                                <ul class="list-group wire-list" id="wire-container">
+                                    <!-- 使用Vue循环遍历线路 -->
+                                    <li v-for="wire in wires" 
+                                        :key="wire.id" 
+                                        class="list-group-item d-flex justify-content-between align-items-center"
+                                        @click="selectElement(wire)">
+                                        {{ wire.name }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 主内容区域 -->
+            <div class="col-md-10 p-0 h-100 main-content">
+                <!-- 工具栏 -->
+                <div class="toolbar bg-secondary bg-opacity-10 p-1 border-bottom">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" title="撤销" @click="undo">
+                            <i class="bi bi-arrow-counterclockwise"></i> 撤销
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" title="重做" @click="redo">
+                            <i class="bi bi-arrow-clockwise"></i> 重做
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" title="删除" @click="deleteSelectedElement">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </div>
+                    <div class="btn-group ms-2">
+                        <button class="btn btn-sm btn-outline-secondary" title="放大" @click="zoomCanvas(0.1)">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" title="缩小" @click="zoomCanvas(-0.1)">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" title="适应屏幕" @click="resetZoom">
+                            <span id="zoom-percentage">100%</span>
+                        </button>
+                    </div>
+                    <div class="btn-group ms-2">
+                        <label class="btn btn-sm btn-outline-secondary" title="导入">
+                            <i class="bi bi-upload"></i> 导入
+                            <input type="file" accept=".txt" @change="handleFileImport" onclick="this.value = null" style="display: none;">
+                        </label>
+                        <button class="btn btn-sm btn-outline-secondary" title="导出" @click="exportCircuit">
+                            <i class="bi bi-download"></i> 导出
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 画布容器 -->
+                <div class="canvas-container">
+                    <div id="drawing-area"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="src/main.js"></script>
+</body>
+</html>
