@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>八字排盘</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        
+        
+        /* 变量定义 */
+        :root {
+            /* 主色调 - 传统中国风配色 */
+            --primary-dark: #1a1a1a;
+            --primary-gold: #d4af37;
+            --primary-red: #c7254e;
+            --primary-blue: #2f4f4f;
+            --primary-green: #228b22;
+            
+            /* 背景色 */
+            --bg-primary: #f8f5f0;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-header: #f0f0f0;
+            
+            /* 文字颜色 */
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-light: #999999;
+            --text-accent: #c7254e;
+            
+            /* 边框和阴影 */
+            --border-color: #000000;
+            --border-light: #e0e0e0;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            
+            /* 间距 */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            
+            /* 字体大小 */
+            --font-xs: 12px;
+            --font-sm: 14px;
+            --font-md: 16px;
+            --font-lg: 18px;
+            --font-xl: 24px;
+        }
+        
+        /* 基础样式 */
+        body {
+            font-family: serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: var(--font-md);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* 容器样式 */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: var(--spacing-sm);
+            background-color: var(--bg-secondary);
+            min-height: 100vh;
+        }
+        
+        /* 时间选择区域 */
+        .time-selector {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background-color: var(--bg-header);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-md);
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        
+        /* 滚动条样式 */
+        .time-selector::-webkit-scrollbar {
+            height: 0;
+        }
+        
+        /* 选择框样式 */
+        .time-selector select {
+            flex: 1;
+            min-width: 80px;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 1px solid var(--border-color);
+            font-size: var(--font-sm);
+            background-color: #ffffff;
+            font-family: 'Noto Serif SC', serif;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        /* 按钮样式 */
+        .calculate-btn {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-sm);
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border: 1px solid var(--border-color);
+            font-size: var(--font-md);
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: var(--spacing-md);
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .calculate-btn:hover {
+            background-color: #243b3b;
+        }
+        
+        /* 节气信息区域 */
+        .jieqi-info {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+        }
+        
+        .jieqi-item {
+            padding: var(--spacing-xs);
+            text-align: left;
+            font-size: var(--font-sm);
+            border-right: 1px solid var(--border-light);
+        }
+        
+        .jieqi-item:last-child {
+            border-right: none;
+        }
+        
+        .jieqi-item.header {
+            background-color: var(--bg-header);
+            font-weight: bold;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 八字网格布局 */
+        .bazi-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .bazi-grid th, .bazi-grid td {
+            padding: var(--spacing-xs);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-size: var(--font-sm);
+        }
+        
+        .bazi-grid th {
+            background-color: var(--bg-header);
+            font-weight: bold;
+        }
+        
+        /* 格子样式 */
+        .grid-cell {
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-xs);
+            text-align: center;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .grid-cell.large {
+            height: 100px;
+        }
+        
+        .grid-cell .main-text {
+            font-size: var(--font-xl);
+            font-weight: bold;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .grid-cell .sub-text {
+            font-size: var(--font-xs);
+            color: var(--text-secondary);
+        }
+        
+        /* 颜色样式 */
+        .yang {
+            color: var(--text-accent);
+        }
+        
+        .yin {
+            color: var(--primary-blue);
+        }
+        
+        /* 信息行样式 */
+        .info-row {
+            display: grid;
+            grid-template-columns: 100px repeat(4, 1fr);
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .info-value[colspan="4"] {
+            grid-column: span 4;
+        }
+        
+        .info-label {
+            padding: var(--spacing-xs);
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-header);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info-value {
+            padding: var(--spacing-xs);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-size: var(--font-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info-value .main-text {
+            font-size: var(--font-xl);
+            font-weight: bold;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .info-value .sub-text {
+            font-size: var(--font-xs);
+            color: var(--text-secondary);
+        }
+        
+        /* 大运流年区域 */
+        .大运流年 {
+            margin-top: var(--spacing-lg);
+        }
+        
+        /* 表格样式 */
+        .dayun-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .dayun-table th, .dayun-table td {
+            padding: var(--spacing-xs);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-size: var(--font-sm);
+        }
+        
+        .dayun-table th {
+            background-color: var(--bg-header);
+            font-weight: bold;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            /* 手机端适配 */
+            .container {
+                padding: var(--spacing-xs);
+            }
+            
+            .time-selector {
+                padding: var(--spacing-sm);
+            }
+            
+            .time-selector select {
+                min-width: 60px;
+                font-size: var(--font-xs);
+                padding: 2px;
+            }
+            
+            .gender-select {
+                gap: var(--spacing-sm);
+                padding: 2px;
+            }
+            
+            .jieqi-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .jieqi-item {
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+            
+            .jieqi-item:last-child {
+                border-bottom: none;
+            }
+            
+
+            
+            .info-row {
+                grid-template-columns: 80px repeat(4, 1fr);
+            }
+            
+            .info-label {
+                font-size: var(--font-xs);
+            }
+            
+            .info-value {
+                font-size: var(--font-xs);
+            }
+        }
+        
+        /* 桌面端适配 */
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1200px;
+                padding: var(--spacing-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 时间选择区域 -->
+        <div class="time-selector">
+            <select id="year">
+                <!-- 年份选项将通过JavaScript动态生成 -->
+            </select>
+            <select id="month">
+                <!-- 月份选项将通过JavaScript动态生成 -->
+            </select>
+            <select id="day">
+                <!-- 日期选项将通过JavaScript动态生成 -->
+            </select>
+            <select id="hour">
+                <!-- 小时选项将通过JavaScript动态生成 -->
+            </select>
+            <select id="minute">
+                <!-- 分钟选项将通过JavaScript动态生成 -->
+            </select>
+            <select id="gender">
+                <option value="male" selected>男</option>
+                <option value="female">女</option>
+            </select>
+        </div>
+        
+        <!-- 计算按钮 -->
+        <button class="calculate-btn" onclick="calculateBazi()">计算八字</button>
+        
+        <!-- 上一节 -->
+        <div class="info-row">
+            <div class="info-label">上一节</div>
+            <div class="info-value" colspan="4">公历 1994/11/7 23:35:36 大雪</div>
+        </div>
+        
+        <!-- 下一节 -->
+        <div class="info-row">
+            <div class="info-label">下一节</div>
+            <div class="info-value" colspan="4">公历 1994/12/7 16:22:53 小寒</div>
+        </div>
+        
+        <!-- 主星 -->
+        <div class="info-row">
+            <div class="info-label">主星</div>
+            <div class="info-value">七杀</div>
+            <div class="info-value">偏印</div>
+            <div class="info-value">日主</div>
+            <div class="info-value">正财</div>
+        </div>
+        
+        <!-- 天干 -->
+        <div class="info-row">
+            <div class="info-label">天干</div>
+            <div class="info-value">
+                <div class="main-text yang">甲</div>
+                <div class="sub-text">阳 木</div>
+            </div>
+            <div class="info-value">
+                <div class="main-text yang">丙</div>
+                <div class="sub-text">阳 火</div>
+            </div>
+            <div class="info-value">
+                <div class="main-text yang">戊</div>
+                <div class="sub-text">阳 土</div>
+            </div>
+            <div class="info-value">
+                <div class="main-text yin">癸</div>
+                <div class="sub-text">阴 水</div>
+            </div>
+        </div>
+        
+        <!-- 地支 -->
+        <div class="info-row">
+            <div class="info-label">地支</div>
+            <div class="info-value">
+                <div class="main-text yang">戌</div>
+                <div class="sub-text">阳 土</div>
+            </div>
+            <div class="info-value">
+                <div class="main-text yang">子</div>
+                <div class="sub-text">阳 水</div>
+            </div>
+            <div class="info-value">
+                <div class="main-text yang">午</div>
+                <div class="sub-text">阳 火</div>
+            </div>
+            <div class="info-value">
+                <div class="main-text yin">亥</div>
+                <div class="sub-text">阴 水</div>
+            </div>
+        </div>
+        
+        <!-- 藏干 -->
+        <div class="info-row">
+            <div class="info-label">藏干</div>
+            <div class="info-value">戊 辛 丁</div>
+            <div class="info-value">癸 - -</div>
+            <div class="info-value">丁 己 -</div>
+            <div class="info-value">壬 甲 -</div>
+        </div>
+        
+        <!-- 副星 -->
+        <div class="info-row">
+            <div class="info-label">副星</div>
+            <div class="info-value">比肩 伤官 正印</div>
+            <div class="info-value">正财 - -</div>
+            <div class="info-value">正印 劫财 -</div>
+            <div class="info-value">偏财 七杀 -</div>
+        </div>
+        
+        <!-- 星运 -->
+        <div class="info-row">
+            <div class="info-label">星运</div>
+            <div class="info-value">墓</div>
+            <div class="info-value">胎</div>
+            <div class="info-value">帝旺</div>
+            <div class="info-value">绝</div>
+        </div>
+        
+        <!-- 自坐 -->
+        <div class="info-row">
+            <div class="info-label">自坐</div>
+            <div class="info-value">养</div>
+            <div class="info-value">胎</div>
+            <div class="info-value">帝旺</div>
+            <div class="info-value">帝旺</div>
+        </div>
+        
+        <!-- 空亡 -->
+        <div class="info-row">
+            <div class="info-label">空亡</div>
+            <div class="info-value">申酉</div>
+            <div class="info-value">申酉</div>
+            <div class="info-value">子丑</div>
+            <div class="info-value">子丑</div>
+        </div>
+        
+        <!-- 纳音 -->
+        <div class="info-row">
+            <div class="info-label">纳音</div>
+            <div class="info-value">山头火</div>
+            <div class="info-value">涧下水</div>
+            <div class="info-value">天上火</div>
+            <div class="info-value">大海水</div>
+        </div>
+        
+        <!-- 神煞 -->
+        <div class="info-row">
+            <div class="info-label">神煞</div>
+            <div class="info-value"></div>
+            <div class="info-value"></div>
+            <div class="info-value"></div>
+            <div class="info-value"></div>
+        </div>
+        
+        <!-- 大运流年区域 -->
+        <div class="大运流年">
+            <h3>大运流年</h3>
+            
+            <!-- 大运表格 -->
+            <table class="dayun-table">
+                <thead>
+                    <tr>
+                        <th>大运</th>
+                        <th>年龄</th>
+                        <th>年份</th>
+                        <th>干支</th>
+                        <th>十神</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>0-9</td>
+                        <td>1994-2003</td>
+                        <td>丁未</td>
+                        <td>劫财</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>10-19</td>
+                        <td>2004-2013</td>
+                        <td>戊申</td>
+                        <td>比肩</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>20-29</td>
+                        <td>2014-2023</td>
+                        <td>己酉</td>
+                        <td>伤官</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>30-39</td>
+                        <td>2024-2033</td>
+                        <td>庚戌</td>
+                        <td>食神</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>40-49</td>
+                        <td>2034-2043</td>
+                        <td>辛亥</td>
+                        <td>正财</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 流年表格 -->
+            <table class="dayun-table">
+                <thead>
+                    <tr>
+                        <th>年份</th>
+                        <th>干支</th>
+                        <th>十神</th>
+                        <th>运势</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2024</td>
+                        <td>甲辰</td>
+                        <td>正官</td>
+                        <td>吉</td>
+                    </tr>
+                    <tr>
+                        <td>2025</td>
+                        <td>乙巳</td>
+                        <td>七杀</td>
+                        <td>凶</td>
+                    </tr>
+                    <tr>
+                        <td>2026</td>
+                        <td>丙午</td>
+                        <td>正财</td>
+                        <td>吉</td>
+                    </tr>
+                    <tr>
+                        <td>2027</td>
+                        <td>丁未</td>
+                        <td>偏财</td>
+                        <td>平</td>
+                    </tr>
+                    <tr>
+                        <td>2028</td>
+                        <td>戊申</td>
+                        <td>伤官</td>
+                        <td>凶</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // 天干
+        const tianGan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+        // 地支
+        const diZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+        // 五行
+        const wuXing = {
+            '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', '己': '土',
+            '庚': '金', '辛': '金', '壬': '水', '癸': '水',
+            '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', '巳': '火',
+            '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水'
+        };
+        //节气部分先不补充
+        const jieQidate = ["06020357"];
+        
+        //六十甲子
+        const jiazi = ["甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",
+                       "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未",
+                       "甲申", "乙酉", "丙戌", "丁亥", "戊子", "己丑", "庚寅", "辛卯", "壬辰", "癸巳",
+                       "甲午", "乙未", "丙申", "丁酉", "戊戌", "己亥", "庚子", "辛丑", "壬寅", "癸卯",
+                       "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥", "壬子", "癸丑",
+                       "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"];
+        //二十四节气
+        const jieQi = [
+            "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑",
+            "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至", "小寒", "大寒"
+        ];
+
+        // 十神
+        const TEN_GODS = {
+            '甲': ['比肩', '劫财', '食神', '伤官', '偏财', '正财', '七杀', '正官', '偏印', '正印'],
+            '乙': ['劫财', '比肩', '伤官', '食神', '正财', '偏财', '正官', '七杀', '正印', '偏印'],
+            '丙': ['偏印', '正印', '比肩', '劫财', '食神', '伤官', '偏财', '正财', '七杀', '正官'],
+            '丁': ['正印', '偏印', '劫财', '比肩', '伤官', '食神', '正财', '偏财', '正官', '七杀'],
+            '戊': ['七杀', '正官', '偏印', '正印', '比肩', '劫财', '食神', '伤官', '偏财', '正财'],
+            '己': ['正官', '七杀', '正印', '偏印', '劫财', '比肩', '伤官', '食神', '正财', '偏财'],
+            '庚': ['偏财', '正财', '七杀', '正官', '偏印', '正印', '比肩', '劫财', '食神', '伤官'],
+            '辛': ['正财', '偏财', '正官', '七杀', '正印', '偏印', '劫财', '比肩', '伤官', '食神'],
+            '壬': ['食神', '伤官', '偏财', '正财', '七杀', '正官', '偏印', '正印', '比肩', '劫财'],
+            '癸': ['伤官', '食神', '正财', '偏财', '正官', '七杀', '正印', '偏印', '劫财', '比肩']
+        };
+        //十二长生
+        const LONGEVITY_TABLE = {
+            '甲': ['沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', '墓', '绝', '胎', '养', '长生'],
+            '乙': ['病', '衰', '帝旺', '临官', '冠带', '沐浴', '长生', '养', '胎', '绝', '墓', '死'],
+            '丙': ['胎', '养', '长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', '墓', '绝'],
+            '丁': ['绝', '墓', '死', '病', '衰', '帝旺', '临官', '冠带', '沐浴', '长生', '养', '胎'],
+            '戊': ['胎', '养', '长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', '墓', '绝'],
+            '己': ['绝', '墓', '死', '病', '衰', '帝旺', '临官', '冠带', '沐浴', '长生', '养', '胎'],
+            '庚': ['死', '墓', '绝', '胎', '养', '长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病'],
+            '辛': ['长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', '墓', '绝', '胎', '养'],
+            '壬': ['帝旺', '衰', '病', '死', '墓', '绝', '胎', '养', '长生', '沐浴', '冠带', '临官'],
+            '癸': ['临官', '冠带', '沐浴', '长生', '养', '胎', '绝', '墓', '死', '病', '衰', '帝旺']
+        };
+        // 纳音
+        const NAYIN_TABLE = {
+            '甲子': '海中金', '乙丑': '海中金','丙寅': '炉中火', '丁卯': '炉中火','戊辰': '大林木', '己巳': '大林木',
+            '庚午': '路旁土', '辛未': '路旁土','壬申': '剑锋金', '癸酉': '剑锋金','甲戌': '山头火', '乙亥': '山头火',
+            '丙子': '涧下水', '丁丑': '涧下水','戊寅': '城头土', '己卯': '城头土','庚辰': '白蜡金', '辛巳': '白蜡金',
+            '壬午': '杨柳木', '癸未': '杨柳木', '甲申': '泉中水', '乙酉': '泉中水','丙戌': '屋上土', '丁亥': '屋上土',
+            '戊子': '霹雳火', '己丑': '霹雳火','庚寅': '松柏木', '辛卯': '松柏木','壬辰': '长流水', '癸巳': '长流水',
+            '甲午': '沙中金', '乙未': '沙中金','丙申': '山下火', '丁酉': '山下火','戊戌': '平地木', '己亥': '平地木',
+            '庚子': '壁上土', '辛丑': '壁上土','壬寅': '金箔金', '癸卯': '金箔金','甲辰': '佛灯火', '乙巳': '佛灯火',
+            '丙午': '天河水', '丁未': '天河水','戊申': '大驿土', '己酉': '大驿土','庚戌': '钗钏金', '辛亥': '钗钏金',
+            '壬子': '桑柘木', '癸丑': '桑柘木','甲寅': '大溪水', '乙卯': '大溪水','丙辰': '沙中土', '丁巳': '沙中土',
+            '戊午': '天上火', '己未': '天上火','庚申': '石榴木', '辛酉': '石榴木','壬戌': '大海水', '癸亥': '大海水'
+        };
+        // 藏干
+        const HIDDEN_STEMS = {
+            '子': ['癸'],
+            '丑': ['己', '辛', '癸'],
+            '寅': ['甲', '丙', '戊'],
+            '卯': ['乙'],
+            '辰': ['戊', '乙', '癸'],
+            '巳': ['丙', '庚', '戊'],
+            '午': ['丁', '己'],
+            '未': ['己', '丁', '乙'],
+            '申': ['庚', '壬', '戊'],
+            '酉': ['辛'],
+            '戌': ['戊', '辛', '丁'],
+            '亥': ['壬', '甲']
+        };
+        // 空亡
+        const VOID_TABLE = {
+            '甲子': '戌亥', '乙丑': '戌亥', '丙寅': '戌亥', '丁卯': '戌亥', '戊辰': '戌亥', '己巳': '戌亥',
+            '庚午': '申酉', '辛未': '申酉', '壬申': '申酉', '癸酉': '申酉', '甲戌': '申酉', '乙亥': '申酉',
+            '丙子': '午未', '丁丑': '午未', '戊寅': '午未', '己卯': '午未', '庚辰': '午未', '辛巳': '午未',
+            '壬午': '辰巳', '癸未': '辰巳', '甲申': '辰巳', '乙酉': '辰巳', '丙戌': '辰巳', '丁亥': '辰巳',
+            '戊子': '寅卯', '己丑': '寅卯', '庚寅': '寅卯', '辛卯': '寅卯', '壬辰': '寅卯', '癸巳': '寅卯',
+            '甲午': '子丑', '乙未': '子丑', '丙申': '子丑', '丁酉': '子丑', '戊戌': '子丑', '己亥': '子丑',
+            '庚子': '戌亥', '辛丑': '戌亥', '壬寅': '戌亥', '癸卯': '戌亥', '甲辰': '戌亥', '乙巳': '戌亥',
+            '丙午': '申酉', '丁未': '申酉', '戊申': '申酉', '己酉': '申酉', '庚戌': '申酉', '辛亥': '申酉',
+            '壬子': '午未', '癸丑': '午未', '甲寅': '午未', '乙卯': '午未', '丙辰': '午未', '丁巳': '午未',
+            '戊午': '辰巳', '己未': '辰巳', '庚申': '辰巳', '辛酉': '辰巳', '壬戌': '辰巳', '癸亥': '辰巳'
+        };
+        // 五行
+        const FIVE_ELEMENTS = {
+            '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水',
+            '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', '巳': '火', '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水'
+        };
+        // 阴阳
+        const YIN_YANG = {
+            '甲': '阳', '乙': '阴', '丙': '阳', '丁': '阴', '戊': '阳', '己': '阴', '庚': '阳', '辛': '阴', '壬': '阳', '癸': '阴',
+            '子': '阳', '丑': '阴', '寅': '阳', '卯': '阴', '辰': '阳', '巳': '阴', '午': '阳', '未': '阴', '申': '阳', '酉': '阴', '戌': '阳', '亥': '阴'
+        };
+
+        //藏干
+        const HIDDEN_STEMS_TABLE = {
+            '子': '癸', 
+            '丑': '己癸辛', 
+            '寅': '甲丙戊',
+            '卯': '乙',
+            '辰': '戊乙癸',
+            '巳': '丙戊庚',
+            '午': '丁己',
+            '未': '己丁乙',
+            '申': '庚壬戊',
+            '酉': '辛',
+            '戌': '戊辛丁',
+            '亥': '壬甲'
+        };
+
+        //上一节气
+        var shangYiJieQi = "";
+        var shangYiJieQiname = "";
+        //下一节气
+        var xiaYiJieQi = "";
+        var xiaYiJieQiname = "";
+        
+        // 初始化时间选择器
+        function initTimeSelectors() {
+            const yearSelect = document.getElementById('year');
+            const monthSelect = document.getElementById('month');
+            const daySelect = document.getElementById('day');
+            const hourSelect = document.getElementById('hour');
+            const minuteSelect = document.getElementById('minute');
+            
+            // 生成年份选项（1900-2100）
+            for (let i = 1900; i <= 2100; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === new Date().getFullYear()) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+            
+            // 生成月份选项（1-12）
+            for (let i = 1; i <= 12; i++) {
+                const option = document.createElement('option');
+                option.value = i - 1; // JavaScript月份从0开始
+                option.textContent = i;
+                if (i === new Date().getMonth() + 1) {
+                    option.selected = true;
+                }
+                monthSelect.appendChild(option);
+            }
+            
+            // 生成日期选项（1-31）
+            updateDayOptions();
+            
+            // 生成小时选项（0-23）
+            for (let i = 0; i < 24; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === new Date().getHours()) {
+                    option.selected = true;
+                }
+                hourSelect.appendChild(option);
+            }
+            
+            // 生成分钟选项（0-59）
+            for (let i = 0; i < 60; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === new Date().getMinutes()) {
+                    option.selected = true;
+                }
+                minuteSelect.appendChild(option);
+            }
+            
+            // 添加年份和月份变化事件，更新日期选项
+            yearSelect.addEventListener('change', updateDayOptions);
+            monthSelect.addEventListener('change', updateDayOptions);
+        }
+        
+        // 更新日期选项
+        function updateDayOptions() {
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+            const daySelect = document.getElementById('day');
+            
+            // 清空现有选项
+            daySelect.innerHTML = '';
+            
+            // 计算该月的天数
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // 生成日期选项
+            for (let i = 1; i <= daysInMonth; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === new Date().getDate()) {
+                    option.selected = true;
+                }
+                daySelect.appendChild(option);
+            }
+        }
+        
+        // 计算八字
+        function getBazi(year, month, day, hour, minute) {
+            //计算上一个节气与下一个节气
+            const jieQiDate = new Date(year, month, day);
+            for (var i = 0; i < jieQidate.length; i=i+2) {
+                if (new Date(1900+Math.floor(i/24),Math.floor((i % 24)/2)+1, jieQidate[i].substring(0, 2)) > jieQiDate) {
+                    xiaYiJieQi = new Date(1900+Math.floor(i/24),Math.floor((i % 24)/2)+1, jieQidate[i].substring(0, 2),jieQidate[i].substring(2, 4),jieQidate[i].substring(4, 6),jieQidate[i].substring(6, 8))
+                    shangYiJieQi = new Date(1900+Math.floor((i-2)/24),Math.floor(((i-2) % 24)/2)+1, jieQidate[i-2].substring(0, 2),jieQidate[i-2].substring(2, 4),jieQidate[i-2].substring(4, 6),jieQidate[i-2].substring(6, 8))
+                    break;
+                }
+            }
+            shangYiJieQiname = jieQi[(i+20) % 24];
+            xiaYiJieQiname = jieQi[(i+22) % 24];
+            var yearPillar = jiazi[Math.floor((((i+20) / 24)+35)) % 60];
+            var monthPillar = jiazi[Math.floor((((i+2) / 2)+11)) % 60];
+            var dayPillar = jiazi[Math.floor(((new Date(year, month, day) - new Date(1900, 1, 6) )/ (1000 * 60 * 60 * 24)+ 15 )) % 60];
+            var hourPillar = tianGan[hour*2 % 10] + diZhi[Math.floor(minute/2)];
+            var bazi = yearPillar + monthPillar + dayPillar + hourPillar;
+            //测试
+            bazi = '乙巳己丑庚子丙戌';
+            shangYiJieQi ='2026/1/5  16:22:53';
+            xiaYiJieQi ='2026/2/4  4:01:51';
+            shangYiJieQiname='大寒';
+            xiaYiJieQiname='立春';
+            return bazi;
+        }
+        
+        // 计算十神
+        function getTenGods(rg,tg) {
+            var tenGods = '';
+            for (let i = 0; i < tg.length; i++) {
+                tenGods += TEN_GODS[rg][tianGan.indexOf(tg[i])];
+            }
+            return tenGods;
+        }
+        
+        // 计算十二长生
+        function getchangsheng(rg,dz) {
+            return  LONGEVITY_TABLE[rg][diZhi.indexOf(dz)];
+        }
+
+        // 计算八字并更新界面
+        function calculateBazi() {
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+            const day = parseInt(document.getElementById('day').value);
+            const hour = parseInt(document.getElementById('hour').value);
+            const minute = parseInt(document.getElementById('minute').value);
+            const gender = document.getElementById('gender').value;
+            
+            // 计算八字
+            const result = getBazi(year, month, day, hour, minute);
+            console.log('八字结果:', result);
+            
+            //计算结果
+            const jsjg = [
+            // 更新节气信息
+            `公历 ${shangYiJieQi} ${shangYiJieQiname}`,
+            `公历 ${xiaYiJieQi} ${xiaYiJieQiname}`,
+
+            // 更新主星（十神）
+            getTenGods(result[4],result[0]),
+            getTenGods(result[4],result[2]),
+            '日主',
+            getTenGods(result[4],result[6]),
+            // 更新八字
+            result[0],result[2],result[4],result[6],
+            result[1],result[3],result[5],result[7],
+            // 更新藏干
+            HIDDEN_STEMS_TABLE[result[1]].split('').join('<br>'),
+            HIDDEN_STEMS_TABLE[result[3]].split('').join('<br>'),
+            HIDDEN_STEMS_TABLE[result[5]].split('').join('<br>'),
+            HIDDEN_STEMS_TABLE[result[7]].split('').join('<br>'),
+            // 更新副星（十神）
+            (getTenGods(result[4],HIDDEN_STEMS_TABLE[result[1]]).match(/.{1,2}/g) || []).join('<br>'),
+            (getTenGods(result[4],HIDDEN_STEMS_TABLE[result[3]]).match(/.{1,2}/g) || []).join('<br>'),
+            (getTenGods(result[4],HIDDEN_STEMS_TABLE[result[5]]).match(/.{1,2}/g) || []).join('<br>'),
+            (getTenGods(result[4],HIDDEN_STEMS_TABLE[result[7]]).match(/.{1,2}/g) || []).join('<br>'),
+            // 更新星运（十二长生）
+            getchangsheng(result[4],result[1]),
+            getchangsheng(result[4],result[3]),
+            getchangsheng(result[4],result[5]),
+            getchangsheng(result[4],result[7]),
+            // 更新自坐（十二长生）
+            getchangsheng(result[0],result[1]),
+            getchangsheng(result[2],result[3]),
+            getchangsheng(result[4],result[5]),
+            getchangsheng(result[6],result[7]),
+
+            // 更新空亡
+            VOID_TABLE[result[0] + result[1]],
+            VOID_TABLE[result[2] + result[3]],
+            VOID_TABLE[result[4] + result[5]],
+            VOID_TABLE[result[6] + result[7]],
+            // 更新纳音
+            NAYIN_TABLE[result[0] + result[1]],
+            NAYIN_TABLE[result[2] + result[3]],
+            NAYIN_TABLE[result[4] + result[5]],
+            NAYIN_TABLE[result[6] + result[7]],
+            // 更新神煞
+            getTenGods(result[4],result[0]),
+            getTenGods(result[4],result[2]),
+            '日主',
+            getTenGods(result[4],result[6]),
+
+            ];
+            // 更新界面
+            const allInfoValues = document.querySelectorAll('.info-row .info-value');
+            for (let i = 0; i < allInfoValues.length; i++) {
+                allInfoValues[i].innerHTML = jsjg[i];
+            }
+
+        }
+        
+        // 页面加载完成后初始化时间选择器
+        window.addEventListener('load', initTimeSelectors);
+    </script>
+</body>
+</html>
